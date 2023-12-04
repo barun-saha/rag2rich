@@ -3,6 +3,8 @@
 
 ref/
 data/*.pdf
+storage/*.json
+evaluation_trulens/.streamlit/
 litellm_uuid.txt
 debian_requirements.txt
 *.sqlite
