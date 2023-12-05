@@ -1,6 +1,7 @@
 import time
 from typing import List
 
+from langchain.chat_models import ChatVertexAI
 from langchain.embeddings import VertexAIEmbeddings
 from langchain.pydantic_v1 import BaseModel
 
@@ -60,3 +61,19 @@ class CustomVertexAIEmbeddings(VertexAIEmbeddings, BaseModel):
             next(limiter)
 
         return [r.values for r in results]
+
+
+def get_llm() -> ChatVertexAI:
+    """
+    Return an instance of the chat-bison model.
+
+    :return: The LLM
+    """
+
+    return ChatVertexAI(
+        model='chat-bison-32k',
+        temperature=0,
+        max_output_tokens=2048,
+        additional_kwargs=VERTEX_AI_LLM_PARAMS
+    )
+

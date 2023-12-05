@@ -10,3 +10,6 @@ chainlit~=0.7.700
 pypdf
 requests~=2.31.0
 numpy~=1.26.2
+
+pymilvus~=2.3.4
+python-dotenv~=1.0.0

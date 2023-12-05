@@ -1,20 +1,38 @@
-import os
 import pathlib
 import time
 import numpy as np
 import litellm
-import vai_util
 
 from langchain.llms import VertexAI
-from llama_index import VectorStoreIndex, SimpleDirectoryReader, TreeIndex, SummaryIndex
-from llama_index import ServiceContext
+from llama_index import (
+    VectorStoreIndex,
+    SimpleDirectoryReader,
+    ServiceContext,
+    get_response_synthesizer,
+)
+from llama_index.retrievers import VectorIndexRetriever
+from llama_index.query_engine import RetrieverQueryEngine
+# from llama_index.postprocessor import SimilarityPostprocessor
 from trulens_eval import Feedback, Tru, TruLlama
 from trulens_eval.feedback import Groundedness
 from trulens_eval.feedback.provider.litellm import LiteLLM
 from typing import List, Tuple, Iterable
 
+import helper.data
+from helper import vertex_ai as vai_util
+
 
 litellm.set_verbose = False
+
+
+def get_lite_llm_provider() -> LiteLLM:
+    """
+    Get an instance of ChatVertexAI via LiteLLM.
+
+    :return: The LLM provider
+    """
+
+    return LiteLLM(model_engine='chat-bison-32k', max_output_tokens=2048)
 
 
 def load_questions(file_name: str) -> List[str]:
@@ -178,6 +196,87 @@ def experiment_with_summary_index(chunk_size_overlap=Iterable[tuple[int]]) -> No
             time.sleep(3)
 
 
+def experiment_with_top_k(top_k=Iterable[List[int]], similarity_cutoff=Iterable[List[float]]) -> None:
+    """
+    Run experiments with different top-k values for vector search.
+    The older versions of LlamaIndex does not seem to support similarity cutoff values for nodes.
+
+    :param top_k: A list of top-k values for vector search
+    :param similarity_cutoff: Threshold for ignoring nodes *Ignored*
+    """
+
+    questions = load_questions('questions.txt')
+
+    tru_llm = get_lite_llm_provider()
+    grounded = Groundedness(groundedness_provider=tru_llm)
+
+    # Define a groundedness feedback function
+    f_groundedness = Feedback(grounded.groundedness_measure_with_cot_reasons).on(
+        TruLlama.select_source_nodes().node.text.collect()
+    ).on_output(
+    ).aggregate(grounded.grounded_statements_aggregator)
+
+    # Question/answer relevance between overall question and answer.
+    f_qa_relevance = Feedback(tru_llm.relevance).on_input_output()
+
+    # Question/statement relevance between question and each context chunk.
+    f_qs_relevance = Feedback(tru_llm.qs_relevance).on_input().on(
+        TruLlama.select_source_nodes().node.text
+    ).aggregate(np.mean)
+
+    n_configs = len(top_k) * len(similarity_cutoff)
+    idx = 1
+    rate_limiter = vai_util.rate_limit(60)
+
+    service_context = helper.data.get_service_context(chunk_size=500, chunk_overlap=100)
+    documents = SimpleDirectoryReader(
+        input_files=['../data/TR-61850.pdf']
+    ).load_data()
+    index = VectorStoreIndex.from_documents(
+        documents,
+        service_context=service_context
+    )
+
+    for k in top_k:
+        for c in [None]:  # similarity_cutoff:
+            print(f'Config {idx} of {n_configs}: {k=}, {c=}')
+
+            # Configure retriever
+            retriever = VectorIndexRetriever(
+                index=index,
+                similarity_top_k=k,
+                service_context=service_context
+            )
+
+            # Configure response synthesizer
+            response_synthesizer = get_response_synthesizer(service_context=service_context)
+
+            # Assemble query engine
+            query_engine = RetrieverQueryEngine(
+                retriever=retriever,
+                response_synthesizer=response_synthesizer,
+                # node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=0.5)],
+            )
+
+            app_id = f'RAG2Rich_LlamaIndex_App_top_k={k}'
+            tru_query_engine_recorder = TruLlama(
+                query_engine,
+                app_id=app_id,
+                feedbacks=[f_groundedness, f_qa_relevance, f_qs_relevance],
+            )
+
+            with tru_query_engine_recorder as _:
+                print('Running queries...')
+                for a_question in questions:
+                    start_time = time.perf_counter()
+                    response = query_engine.query(a_question)
+                    end_time = time.perf_counter()
+                    print('Response:', response)
+                    print(f'Computation time: {1000 * (end_time - start_time):.3f} ms')
+                    next(rate_limiter)
+                    time.sleep(2)
+
+
 if __name__ == '__main__':
     tru = Tru()
     tru.start_dashboard(
@@ -202,3 +301,7 @@ if __name__ == '__main__':
 
     # Does not perform well
     # experiment_with_summary_index((512, 100))
+
+    # The optimal top-k value is 6
+    experiment_with_top_k(top_k=[2, 4, 6, 8], similarity_cutoff=[0.5, 0.7])
+
