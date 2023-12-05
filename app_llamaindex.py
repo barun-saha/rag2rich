@@ -1,62 +1,37 @@
 import os.path
 import chainlit as cl
 import time
+import pymilvus as mil
 import requests
 
 from pathlib import Path
 from llama_index.query_engine.retriever_query_engine import RetrieverQueryEngine
 from llama_index import (
     StorageContext,
-    load_index_from_storage,
 )
 from llama_index import VectorStoreIndex, SimpleDirectoryReader, ServiceContext
 from langchain.chat_models import ChatVertexAI
+from llama_index.vector_stores import MilvusVectorStore
+from dotenv import load_dotenv
 
-from vai_util import VERTEX_AI_LLM_PARAMS, CustomVertexAIEmbeddings
+import helper.data as dhelp
+import helper.vertex_ai as vai
 
 
-LOCAL_FILE_NAME = 'data/TR-61850.pdf'
-INDEX_STORAGE_DIR = './storage'
+def load_index() -> VectorStoreIndex:
+    """
+    Load an existing index from Zilliz cloud datastore.
 
-llm = ChatVertexAI(
-    model='chat-bison-32k',
-    temperature=0,
-    additional_kwargs=VERTEX_AI_LLM_PARAMS
-)
-service_context = ServiceContext.from_defaults(
-    chunk_size=512,  # Based on optimal richness
-    chunk_overlap=100,
-    llm=llm,
-    embed_model=CustomVertexAIEmbeddings()
-)
+    :return: The vector store index
+    """
 
-try:
-    print('Loading index from storage...')
-    # rebuild storage context
-    storage_context = StorageContext.from_defaults(persist_dir=INDEX_STORAGE_DIR)
-    # load index
-    index = load_index_from_storage(
-        storage_context,
-        service_context=service_context
-    )
-except Exception as ex:
-    print(f'Building index from scratch because of exception: {ex}')
+    print('Loading Milvus index from Zilliz cloud...')
+    vector_store = dhelp.get_vector_store(overwrite=False)
+    service_context = dhelp.get_service_context(chunk_size=512, chunk_overlap=100)
+    # storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    index = VectorStoreIndex.from_vector_store(vector_store, service_context=service_context)
 
-    if not os.path.exists(LOCAL_FILE_NAME) or os.path.isfile(LOCAL_FILE_NAME):
-        filename = Path(LOCAL_FILE_NAME)
-        url = 'https://www.fit.vut.cz/research/publication-file/11832/TR-61850.pdf'
-        response = requests.get(url)
-        filename.write_bytes(response.content)
-
-    documents = SimpleDirectoryReader(
-        input_files=[LOCAL_FILE_NAME]
-    ).load_data()
-    index = VectorStoreIndex.from_documents(
-        documents,
-        service_context=service_context,
-        show_progress=True
-    )
-    index.storage_context.persist(INDEX_STORAGE_DIR)
+    return index
 
 
 @cl.on_chat_start
@@ -65,7 +40,11 @@ async def on_chat_start():
         content='Hello there!',
     ).send()
 
-    query_engine = index.as_query_engine(streaming=True, service_context=service_context)
+    index = load_index()
+    query_engine = index.as_query_engine(
+        streaming=True,
+        service_context=dhelp.get_service_context(chunk_size=512, chunk_overlap=100)
+    )
     cl.user_session.set('query_engine', query_engine)
 
 
@@ -91,6 +70,6 @@ async def main(message: cl.Message):
 
 @cl.on_chat_end
 def end():
-    print('Goodbye', cl.user_session.get("id"))
+    print('Goodbye!', cl.user_session.get("id"))
 
 
