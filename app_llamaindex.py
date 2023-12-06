@@ -9,17 +9,32 @@ import helper.data as dhelp
 
 @cl.on_chat_start
 async def on_chat_start():
+    welcome_message = (
+        'Hello there!'
+        ' I am here to answer your questions based on the'
+        ' [Description of IEC 61850 Communication](https://www.fit.vut.cz/research/publication-file/11832/TR-61850.pdf).'
+        ' Try out one of these sample questions or ask something different:'
+        '\n\n'
+        '- Summarize GOOSE'
+        '\n\n'
+        '- Write an email to a prospective customer highlighting the importance and features of 61850 communication.'
+        '\n\n'
+        '- Show the differences between GOOSE and MMS.'
+    )
     await cl.Message(
-        content='Hello there!',
+        content=welcome_message,
     ).send()
 
-    # index = load_index()
-    # query_engine = index.as_query_engine(
-    #     streaming=True,
-    #     service_context=dhelp.get_service_context(chunk_size=512, chunk_overlap=100)
-    # )
-    query_engine = dhelp.get_top_k_query_engine(k=6, chunk_size=512, chunk_overlap=100)
-    cl.user_session.set('query_engine', query_engine)
+    try:
+        query_engine = dhelp.get_top_k_query_engine(k=6, chunk_size=512, chunk_overlap=100)
+        cl.user_session.set('query_engine', query_engine)
+    except Exception as ex:
+        message = f'*** An error occurred while trying to load the application: {ex}'
+        print(message)
+        await cl.ErrorMessage(
+            content=message,
+            author='Error'
+        ).send()
 
 
 @cl.on_message
