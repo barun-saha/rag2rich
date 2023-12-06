@@ -1,7 +1,7 @@
 
 # RAG2Rich  
   
-***"Rich" answers do not hallucinate. Almost.***  
+***"Rich" answers don't hallucinate. Almost.***  
   
   
 ## Overview  
@@ -14,7 +14,9 @@ RAG2Rich computes and uses the optimal chunk size and chunk overlap based on thr
 - Groundedness (G)  
   
 We compute these metrics using TruLens Eval. Subsequently, we combine these metrics to define "Rich score" as follows:  
-$R(X; P) = \frac{1}{1 + e^{-WX}},$ where $X = (G, C, A)$, $P$ is a set of parameters, and $W$ is a weight vector.  
+$R(X; P) = \frac{1}{1 + e^{-WX}}$,
+
+where $X = (G, C, A)$, $P$ is a set of parameters, and $W$ is a weight vector.  
 
 
 ## RAG Optimization
