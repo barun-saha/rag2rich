@@ -1,6 +1,8 @@
 import os
 
-from llama_index import ServiceContext
+from llama_index import ServiceContext, get_response_synthesizer, VectorStoreIndex
+from llama_index.indices.vector_store import VectorIndexRetriever
+from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.vector_stores import MilvusVectorStore
 
 from helper.vertex_ai import CustomVertexAIEmbeddings, get_llm
@@ -39,3 +41,29 @@ def get_vector_store(overwrite: bool) -> MilvusVectorStore:
         dim=int(os.environ['ZILLIZ_DIMENSION']),
         overwrite=overwrite
     )
+
+
+def get_top_k_query_engine(k: int, chunk_size: int, chunk_overlap: int) -> RetrieverQueryEngine:
+    vector_store = get_vector_store(overwrite=False)
+    service_context = get_service_context(chunk_size, chunk_overlap)
+    index = VectorStoreIndex.from_vector_store(vector_store, service_context=service_context)
+
+    # Configure retriever
+    retriever = VectorIndexRetriever(
+        index=index,
+        similarity_top_k=k,
+        service_context=service_context
+    )
+
+    # Configure response synthesizer
+    response_synthesizer = get_response_synthesizer(service_context=service_context)
+
+    # Assemble query engine
+    query_engine = RetrieverQueryEngine(
+        retriever=retriever,
+        response_synthesizer=response_synthesizer,
+        # node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=0.5)],
+    )
+
+    return query_engine
+
