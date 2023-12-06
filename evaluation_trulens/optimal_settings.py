@@ -27,12 +27,12 @@ def get_answer_richness(measurements: List[float]) -> float:
     return 1.0 / (1 + math.exp(-total))
 
 
-def get_optimal_chunk(file_name: str) -> tuple[ndarray[int], float]:
+def get_optimal_chunk(file_name: str) -> tuple[float, ndarray[int], list[float]]:
     """
     Find the setting that leads to optimal richness in terms of chunking.
 
     :param file_name: The file containing TruLens RAG triad measurements for different settings
-    :return: The optimal setting index and the corresponding measurements
+    :return: The richness score, optimal setting index, and the corresponding measurements
     """
 
     richness = []
@@ -50,10 +50,10 @@ def get_optimal_chunk(file_name: str) -> tuple[ndarray[int], float]:
 
     max_idx = np.argmax(richness)
 
-    return max_idx, triads[max_idx]
+    return richness[max_idx], max_idx, triads[max_idx]
 
 
-def get_optimal_top_k(file_name: str) -> tuple[ndarray[int], float]:
+def get_optimal_top_k(file_name: str) -> tuple[float, ndarray[int], list[float]]:
     """
     Find the setting that leads to optimal richness in terms of top-k values.
 
@@ -76,12 +76,12 @@ def get_optimal_top_k(file_name: str) -> tuple[ndarray[int], float]:
 
     max_idx = np.argmax(richness)
 
-    return max_idx, triads[max_idx]
+    return richness[max_idx], max_idx, triads[max_idx]
 
 
 if __name__ == '__main__':
-    idx, rag_triad = get_optimal_chunk('chunk_measurements_from_dashboard.csv')
-    print(f'Optimal chunk settings obtained for index: {idx}; the corresponding RAG triad: {rag_triad}')
+    rich, idx, rag_triad = get_optimal_chunk('chunk_measurements_from_dashboard.csv')
+    print(f'{rich=}; optimal chunk settings obtained for index: {idx}; the corresponding RAG triad: {rag_triad}')
 
-    idx, rag_triad = get_optimal_top_k('top_k_measurements_from_dashboard.csv')
-    print(f'Optimal top-k setting obtained for index: {idx}; the corresponding RAG triad: {rag_triad}')
+    rich, idx, rag_triad = get_optimal_top_k('top_k_measurements_from_dashboard.csv')
+    print(f'{rich=}; optimal top-k setting obtained for index: {idx}; the corresponding RAG triad: {rag_triad}')

@@ -62,7 +62,8 @@ def get_top_k_query_engine(k: int, chunk_size: int, chunk_overlap: int) -> Retri
     query_engine = RetrieverQueryEngine(
         retriever=retriever,
         response_synthesizer=response_synthesizer,
-        # node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=0.5)],
+        # A positive similarity_cutoff value degraded the TruLens scores (and thus, richness)
+        # node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=0.2)],
     )
 
     return query_engine

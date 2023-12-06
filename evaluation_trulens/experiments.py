@@ -12,7 +12,7 @@ from llama_index import (
 )
 from llama_index.retrievers import VectorIndexRetriever
 from llama_index.query_engine import RetrieverQueryEngine
-# from llama_index.postprocessor import SimilarityPostprocessor
+from llama_index.indices.postprocessor.node import SimilarityPostprocessor
 from trulens_eval import Feedback, Tru, TruLlama
 from trulens_eval.feedback import Groundedness
 from trulens_eval.feedback.provider.litellm import LiteLLM
@@ -198,11 +198,10 @@ def experiment_with_summary_index(chunk_size_overlap=Iterable[tuple[int]]) -> No
 
 def experiment_with_top_k(top_k=Iterable[List[int]], similarity_cutoff=Iterable[List[float]]) -> None:
     """
-    Run experiments with different top-k values for vector search.
-    The older versions of LlamaIndex does not seem to support similarity cutoff values for nodes.
+    Run experiments with different top-k values and similarity cutoff for vector search.
 
     :param top_k: A list of top-k values for vector search
-    :param similarity_cutoff: Threshold for ignoring nodes *Ignored*
+    :param similarity_cutoff: Threshold for ignoring nodes
     """
 
     questions = load_questions('questions.txt')
@@ -236,10 +235,12 @@ def experiment_with_top_k(top_k=Iterable[List[int]], similarity_cutoff=Iterable[
         documents,
         service_context=service_context
     )
+    the_runs = []
 
     for k in top_k:
-        for c in [None]:  # similarity_cutoff:
+        for c in similarity_cutoff:
             print(f'Config {idx} of {n_configs}: {k=}, {c=}')
+            the_runs.append((k, c))
 
             # Configure retriever
             retriever = VectorIndexRetriever(
@@ -255,10 +256,10 @@ def experiment_with_top_k(top_k=Iterable[List[int]], similarity_cutoff=Iterable[
             query_engine = RetrieverQueryEngine(
                 retriever=retriever,
                 response_synthesizer=response_synthesizer,
-                # node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=0.5)],
+                node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=c)],
             )
 
-            app_id = f'RAG2Rich_LlamaIndex_App_top_k={k}'
+            app_id = f'RAG2Rich_Exp_top_k={k}_cutoff={c}'
             tru_query_engine_recorder = TruLlama(
                 query_engine,
                 app_id=app_id,
@@ -274,7 +275,13 @@ def experiment_with_top_k(top_k=Iterable[List[int]], similarity_cutoff=Iterable[
                     print('Response:', response)
                     print(f'Computation time: {1000 * (end_time - start_time):.3f} ms')
                     next(rate_limiter)
-                    time.sleep(2)
+                    time.sleep(4)
+
+            time.sleep(4)
+
+    print('The runs are:')
+    for idx, run in enumerate(the_runs):
+        print(f'Index: {idx}:: {run}')
 
 
 if __name__ == '__main__':
@@ -302,6 +309,10 @@ if __name__ == '__main__':
     # Does not perform well
     # experiment_with_summary_index((512, 100))
 
-    # The optimal top-k value is 6
-    experiment_with_top_k(top_k=[2, 4, 6, 8], similarity_cutoff=[0.5, 0.7])
+    # The optimal top-k value is 6 without similarity cutoff
+    # A positive value of similarity cutoff degraded the scores
+    # experiment_with_top_k(top_k=[2, ], similarity_cutoff=[0.3, 0.4, 0.5, 0.6])
+    # experiment_with_top_k(top_k=[4, ], similarity_cutoff=[0.3, 0.4, 0.5, 0.6])
+    # experiment_with_top_k(top_k=[6, ], similarity_cutoff=[0.3, 0.4, 0.5, 0.6])
+    # experiment_with_top_k(top_k=[8, ], similarity_cutoff=[0.3, 0.4, 0.5, 0.6])
 
