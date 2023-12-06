@@ -8,6 +8,8 @@ evaluation_trulens/.streamlit/
 litellm_uuid.txt
 debian_requirements.txt
 *.sqlite
+service.yaml
+
 
 ### Django ###
 *.log
