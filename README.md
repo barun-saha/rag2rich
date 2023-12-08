@@ -8,12 +8,12 @@
   
 In Retrieval-Augmented Generation (RAG), document(s) are at first divided into multiple chunks.  The size of chunks and the overlap between two chunks, among other parameters, play an important role in retrieving the correct context and answers.  
   
-RAG2Rich computes and uses the optimal chunk size and chunk overlap based on three metrics:  
+RAG2Rich computes and uses the optimal configurations based on three metrics:  
 - Context relevance (C )  
 - Answer relevance (A)  
 - Groundedness (G)  
   
-We compute these metrics using TruLens Eval. Subsequently, we combine these metrics to define "Rich score" as follows:  
+We compute these metrics using [TruLens Eval](https://www.trulens.org/). Subsequently, we combine these metrics to define "Rich score" as follows:  
 $R(X; P) = \frac{1}{1 + e^{-WX}}$,
 
 where $X = (G, C, A)$, $P$ is a set of parameters, and $W$ is a weight vector.  
@@ -21,7 +21,7 @@ where $X = (G, C, A)$, $P$ is a set of parameters, and $W$ is a weight vector.
 
 ## RAG Optimization
   
-We use the publicly available Technical Report titled [Description of IEC 61850 Communication](https://www.fit.vut.cz/research/publication-file/11832/TR-61850.pdf) as a data source to demonstrate RAG2Rich. The report is used solely for the purpose of demonstration, and it is not distributed with this application or code.  
+We use the publicly available Technical Report titled [Description of IEC 61850 Communication](https://www.fit.vut.cz/research/publication-file/11832/TR-61850.pdf) as the data source to demonstrate RAG2Rich. The report is used solely for the purpose of demonstration, and it is not distributed with the code.  
   
 RAG2Rich is tuned by considering the following questions:  
 - What is IEC 61850?  
@@ -35,15 +35,15 @@ RAG2Rich is tuned by considering the following questions:
 - Are GOOSE messages encrypted?  
 - What is a data set?  
   
-Based on the above-mentioned document, the application generates answers for each of these questions based on the aforementioned document.  The output vector $X$ is obtained by varying the different parameters in $P$, such as:  
+Based on the above-mentioned document, the application generates answers for each of these questions.  The output score vector $X$ is obtained by varying the different parameters in $P$, such as:  
 - chunk size  
 - chunk overlap  
 - top-k 
   
-For each such set, the average richness, $R$, is computed.  The set with the highest value of $R$ is used as the final, optimal configuration. For example, we set: chunk size = 512, chunk overlap = 100, and top-k = 6.
+For each such set, the average richness, $R$, is computed.  The set with the highest value of $R$ is used as the final, optimal configuration. The currently used optimal values are: chunk size = 512, chunk overlap = 100, and top-k = 6.
 
 
-## Running
+## Usage
 
 Install the dependencies:
 
