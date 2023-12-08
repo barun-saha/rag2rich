@@ -23,6 +23,7 @@ async def on_chat_start():
     )
     await cl.Message(
         content=welcome_message,
+        disable_human_feedback=True
     ).send()
 
     try:
