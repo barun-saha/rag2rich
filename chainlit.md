@@ -10,3 +10,7 @@ RAG2Rich defines and computes the "Rich" score of answers based on the context r
 
 where X = (G, C, A), P is a set of parameters, and W is a weight vector. The currently used optimal RAG parameters are: chunk size = 512, chunk overlap = 100, and top-k = 6.
 
+
+---
+
+![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Frag2rich-vc4smj6o3q-uc.a.run.app%2F&countColor=%23263759&labelStyle=none)
