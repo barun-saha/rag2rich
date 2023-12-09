@@ -1,0 +1,328 @@
+App Leaderboard
+
+Average feedback values displayed in the range from 0 (worst) to 1 (best).
+00. RAG2Rich_c_size=512_c_overlap=50_top_k=2_cutoff=None
+
+Records
+10
+
+Average Latency (Seconds)
+1.8
+
+Total Cost (USD)
+$0
+
+Total Tokens
+0
+
+qs_relevance
+0.68
+⚠️ medium
+
+relevance
+0.8
+✅ high
+
+groundedness_measure_with_cot_reasons
+0.9
+✅ high
+01. RAG2Rich_c_size=512_c_overlap=50_top_k=4_cutoff=None
+
+Records
+10
+
+Average Latency (Seconds)
+1.8
+
+Total Cost (USD)
+$0
+
+Total Tokens
+0
+
+qs_relevance
+0.56
+🛑 low
+
+relevance
+0.76
+⚠️ medium
+
+groundedness_measure_with_cot_reasons
+0.88
+✅ high
+02. RAG2Rich_c_size=512_c_overlap=50_top_k=6_cutoff=None
+
+Records
+10
+
+Average Latency (Seconds)
+1.8
+
+Total Cost (USD)
+$0
+
+Total Tokens
+0
+
+qs_relevance
+0.55
+🛑 low
+
+relevance
+0.76
+⚠️ medium
+
+groundedness_measure_with_cot_reasons
+0.89
+✅ high
+03. RAG2Rich_c_size=512_c_overlap=75_top_k=2_cutoff=None
+
+Records
+10
+
+Average Latency (Seconds)
+1.8
+
+Total Cost (USD)
+$0
+
+Total Tokens
+0
+
+qs_relevance
+0.72
+⚠️ medium
+
+relevance
+0.81
+✅ high
+
+groundedness_measure_with_cot_reasons
+0.9
+✅ high
+04. RAG2Rich_c_size=512_c_overlap=75_top_k=4_cutoff=None
+
+Records
+10
+
+Average Latency (Seconds)
+1.8
+
+Total Cost (USD)
+$0
+
+Total Tokens
+0
+
+qs_relevance
+0.64
+⚠️ medium
+
+relevance
+0.83
+✅ high
+
+groundedness_measure_with_cot_reasons
+0.89
+✅ high
+05. RAG2Rich_c_size=512_c_overlap=75_top_k=6_cutoff=None
+
+Records
+10
+
+Average Latency (Seconds)
+1.8
+
+Total Cost (USD)
+$0
+
+Total Tokens
+0
+
+qs_relevance
+0.57
+🛑 low
+
+relevance
+0.74
+⚠️ medium
+
+groundedness_measure_with_cot_reasons
+0.77
+⚠️ medium
+06. RAG2Rich_c_size=512_c_overlap=100_top_k=2_cutoff=None
+
+Records
+10
+
+Average Latency (Seconds)
+1.8
+
+Total Cost (USD)
+$0
+
+Total Tokens
+0
+
+qs_relevance
+0.7
+⚠️ medium
+
+relevance
+0.83
+✅ high
+
+groundedness_measure_with_cot_reasons
+0.85
+✅ high
+07. RAG2Rich_c_size=512_c_overlap=100_top_k=4_cutoff=None
+
+Records
+10
+
+Average Latency (Seconds)
+1.8
+
+Total Cost (USD)
+$0
+
+Total Tokens
+0
+
+qs_relevance
+0.62
+⚠️ medium
+
+relevance
+0.77
+⚠️ medium
+
+groundedness_measure_with_cot_reasons
+0.89
+✅ high
+08. RAG2Rich_c_size=512_c_overlap=100_top_k=6_cutoff=None
+
+Records
+10
+
+Average Latency (Seconds)
+1.8
+
+Total Cost (USD)
+$0
+
+Total Tokens
+0
+
+qs_relevance
+0.56
+🛑 low
+
+relevance
+0.83
+✅ high
+
+groundedness_measure_with_cot_reasons
+0.86
+✅ high
+09. RAG2Rich_c_size=768_c_overlap=50_top_k=2_cutoff=None
+
+Records
+10
+
+Average Latency (Seconds)
+1.8
+
+Total Cost (USD)
+$0
+
+Total Tokens
+0
+
+qs_relevance
+0.68
+⚠️ medium
+
+relevance
+0.84
+✅ high
+
+groundedness_measure_with_cot_reasons
+0.67
+⚠️ medium
+10. RAG2Rich_c_size=768_c_overlap=50_top_k=4_cutoff=None
+
+Records
+10
+
+Average Latency (Seconds)
+1.8
+
+Total Cost (USD)
+$0
+
+Total Tokens
+0
+
+qs_relevance
+0.61
+⚠️ medium
+
+relevance
+0.83
+✅ high
+
+groundedness_measure_with_cot_reasons
+0.86
+✅ high
+11. RAG2Rich_c_size=768_c_overlap=50_top_k=6_cutoff=None
+
+Records
+10
+
+Average Latency (Seconds)
+1.8
+
+Total Cost (USD)
+$0
+
+Total Tokens
+0
+
+qs_relevance
+0.61
+⚠️ medium
+
+relevance
+0.94
+✅ high
+
+groundedness_measure_with_cot_reasons
+0.86
+✅ high
+12. RAG2Rich_c_size=768_c_overlap=75_top_k=2_cutoff=None
+
+Records
+10
+
+Average Latency (Seconds)
+1.8
+
+Total Cost (USD)
+$0
+
+Total Tokens
+0
+
+qs_relevance
+0.62
+⚠️ medium
+
+relevance
+0.83
+✅ high
+
+groundedness_measure_with_cot_reasons
+0.65
+⚠️ medium

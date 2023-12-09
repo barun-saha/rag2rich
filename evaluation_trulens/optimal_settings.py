@@ -86,3 +86,6 @@ if __name__ == '__main__':
     # rich, idx, rag_triad = get_optimal_top_k('top_k_cutoff_measurements_from_dashboard.csv')
     rich, idx, rag_triad = get_optimal_top_k('top_k_measurements_from_dashboard.csv')
     print(f'{rich=}; optimal top-k setting obtained for index: {idx}; the corresponding RAG triad: {rag_triad}')
+
+    rich, idx, rag_triad = get_optimal_top_k('chunks_top_k_measurements_from_dashboard.csv')
+    print(f'{rich=}; optimal chunks, top-k setting obtained for index: {idx}; the corresponding RAG triad: {rag_triad}')
