@@ -1,4 +1,5 @@
 import pathlib
+import random
 import time
 import numpy as np
 import litellm
@@ -8,7 +9,7 @@ from llama_index import (
     VectorStoreIndex,
     SimpleDirectoryReader,
     ServiceContext,
-    get_response_synthesizer,
+    get_response_synthesizer, SummaryIndex,
 )
 from llama_index.retrievers import VectorIndexRetriever
 from llama_index.query_engine import RetrieverQueryEngine
@@ -32,7 +33,7 @@ def get_lite_llm_provider() -> LiteLLM:
     :return: The LLM provider
     """
 
-    return LiteLLM(model_engine='chat-bison-32k', max_output_tokens=2048)
+    return LiteLLM(model_engine='chat-bison-32k', max_output_tokens=2048, temperature=0.0)
 
 
 def load_questions(file_name: str) -> List[str]:
@@ -196,6 +197,24 @@ def experiment_with_summary_index(chunk_size_overlap=Iterable[tuple[int]]) -> No
             time.sleep(3)
 
 
+def get_max_qpm(k: int) -> int:
+    """
+    Adaptively rate limit the LLm API calls for RAG triad based on the top-k value.
+    Warning: it is not fool-proof!
+    Also, it does not consider that LiteLLM may retry running the failed queries again.
+
+    :param k: The top-k value for vector search
+    :return: The maximum no. of queries to run per minute
+    """
+
+    # One each for the answer, answer relevance, groundedness; plus, some margin
+    n_approx_calls = k + 3 + 2
+    n_total_calls = max(1, int(60 / n_approx_calls))
+    print(f'get_max_qpm: {k=}, {n_total_calls=}')
+
+    return n_total_calls
+
+
 def experiment_with_top_k(top_k=Iterable[List[int]], similarity_cutoff=Iterable[List[float]]) -> None:
     """
     Run experiments with different top-k values and similarity cutoff for vector search.
@@ -205,6 +224,9 @@ def experiment_with_top_k(top_k=Iterable[List[int]], similarity_cutoff=Iterable[
     """
 
     questions = load_questions('questions.txt')
+    documents = SimpleDirectoryReader(
+        input_files=['../data/TR-61850.pdf']
+    ).load_data()
 
     tru_llm = get_lite_llm_provider()
     grounded = Groundedness(groundedness_provider=tru_llm)
@@ -225,12 +247,8 @@ def experiment_with_top_k(top_k=Iterable[List[int]], similarity_cutoff=Iterable[
 
     n_configs = len(top_k) * len(similarity_cutoff)
     idx = 1
-    rate_limiter = vai_util.rate_limit(60)
 
-    service_context = helper.data.get_service_context(chunk_size=500, chunk_overlap=100)
-    documents = SimpleDirectoryReader(
-        input_files=['../data/TR-61850.pdf']
-    ).load_data()
+    service_context = helper.data.get_service_context(chunk_size=512, chunk_overlap=100)
     index = VectorStoreIndex.from_documents(
         documents,
         service_context=service_context
@@ -238,6 +256,8 @@ def experiment_with_top_k(top_k=Iterable[List[int]], similarity_cutoff=Iterable[
     the_runs = []
 
     for k in top_k:
+        rate_limiter = vai_util.rate_limit(max_per_minute=get_max_qpm(k))
+
         for c in similarity_cutoff:
             print(f'Config {idx} of {n_configs}: {k=}, {c=}')
             the_runs.append((k, c))
@@ -253,11 +273,18 @@ def experiment_with_top_k(top_k=Iterable[List[int]], similarity_cutoff=Iterable[
             response_synthesizer = get_response_synthesizer(service_context=service_context)
 
             # Assemble query engine
-            query_engine = RetrieverQueryEngine(
-                retriever=retriever,
-                response_synthesizer=response_synthesizer,
-                node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=c)],
-            )
+            if c is None:
+                query_engine = RetrieverQueryEngine(
+                    retriever=retriever,
+                    response_synthesizer=response_synthesizer,
+                    # node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=c)],
+                )
+            else:
+                query_engine = RetrieverQueryEngine(
+                    retriever=retriever,
+                    response_synthesizer=response_synthesizer,
+                    node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=c)],
+                )
 
             app_id = f'RAG2Rich_Exp_top_k={k}_cutoff={c}'
             tru_query_engine_recorder = TruLlama(
@@ -275,9 +302,11 @@ def experiment_with_top_k(top_k=Iterable[List[int]], similarity_cutoff=Iterable[
                     print('Response:', response)
                     print(f'Computation time: {1000 * (end_time - start_time):.3f} ms')
                     next(rate_limiter)
-                    time.sleep(4)
+                    # Additional buffer
+                    time.sleep(1 + random.random())
 
-            time.sleep(4)
+        # Clear any previous timer
+        time.sleep(60 + random.random())
 
     print('The runs are:')
     for idx, run in enumerate(the_runs):
@@ -316,3 +345,5 @@ if __name__ == '__main__':
     # experiment_with_top_k(top_k=[6, ], similarity_cutoff=[0.3, 0.4, 0.5, 0.6])
     # experiment_with_top_k(top_k=[8, ], similarity_cutoff=[0.3, 0.4, 0.5, 0.6])
 
+    # Optimal k = 2 (RAG2Rich_Exp_top_k=2_cutoff=None)
+    experiment_with_top_k(top_k=[2, 4, 6, ], similarity_cutoff=[None])
