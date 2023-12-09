@@ -1,3 +1,4 @@
+import os
 import pathlib
 import random
 import time
@@ -11,6 +12,7 @@ from llama_index import (
     ServiceContext,
     get_response_synthesizer, SummaryIndex,
 )
+from llama_index.indices.postprocessor import CohereRerank
 from llama_index.retrievers import VectorIndexRetriever
 from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.indices.postprocessor.node import SimilarityPostprocessor
@@ -18,11 +20,13 @@ from trulens_eval import Feedback, Tru, TruLlama
 from trulens_eval.feedback import Groundedness
 from trulens_eval.feedback.provider.litellm import LiteLLM
 from typing import List, Tuple, Iterable
+from dotenv import load_dotenv
 
 import helper.data
 from helper import vertex_ai as vai_util
 
 
+load_dotenv()
 litellm.set_verbose = False
 
 
@@ -348,6 +352,94 @@ def experiment_with_chunks_and_top_k(
         print(f'Index: {idx}:: {run}')
 
 
+def experiment_with_reranker(
+        chunk_size: int,
+        chunk_overlap: int,
+        top_k: int,
+        top_n: int
+) -> None:
+    """
+    Run experiments using Cohere re-ranker, together with different top-k values and similarity cutoff for vector search.
+
+    :param chunk_size: The chunk size value
+    :param chunk_overlap: The chunk overlap value
+    :param top_k: The top-k value for vector search
+    :param top_n: Cohere top-n results
+    """
+
+    questions = load_questions('questions.txt')
+    documents = SimpleDirectoryReader(
+        input_files=['../data/TR-61850.pdf']
+    ).load_data()
+
+    tru_llm = get_lite_llm_provider()
+    grounded = Groundedness(groundedness_provider=tru_llm)
+
+    # Define a groundedness feedback function
+    f_groundedness = Feedback(grounded.groundedness_measure_with_cot_reasons).on(
+        TruLlama.select_source_nodes().node.text.collect()
+    ).on_output(
+    ).aggregate(grounded.grounded_statements_aggregator)
+
+    # Question/answer relevance between overall question and answer.
+    f_qa_relevance = Feedback(tru_llm.relevance).on_input_output()
+
+    # Question/statement relevance between question and each context chunk.
+    f_qs_relevance = Feedback(tru_llm.qs_relevance).on_input().on(
+        TruLlama.select_source_nodes().node.text
+    ).aggregate(np.mean)
+
+    service_context = helper.data.get_service_context(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    index = VectorStoreIndex.from_documents(
+        documents,
+        service_context=service_context
+    )
+    rate_limiter = vai_util.rate_limit(max_per_minute=get_max_qpm(top_k))
+
+    # Configure retriever
+    retriever = VectorIndexRetriever(
+        index=index,
+        similarity_top_k=top_k,
+        service_context=service_context
+    )
+
+    cohere_rerank = CohereRerank(
+        api_key=os.environ['COHERE_API_KEY'],
+        top_n=top_n
+    )
+
+    # Configure response synthesizer
+    response_synthesizer = get_response_synthesizer(service_context=service_context)
+
+    # Assemble query engine
+    query_engine = RetrieverQueryEngine(
+        retriever=retriever,
+        response_synthesizer=response_synthesizer,
+        node_postprocessors=[cohere_rerank],
+        # node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=c)],
+    )
+
+    app_id = f'RAG2Rich_cohere_c_size={chunk_size}_c_overlap={chunk_overlap}_top_k={top_k}_top_n={top_n}'
+
+    tru_query_engine_recorder = TruLlama(
+        query_engine,
+        app_id=app_id,
+        feedbacks=[f_groundedness, f_qa_relevance, f_qs_relevance],
+    )
+
+    with tru_query_engine_recorder as _:
+        print('Running queries...')
+        for a_question in questions:
+            start_time = time.perf_counter()
+            response = query_engine.query(a_question)
+            end_time = time.perf_counter()
+            print('Response:', response)
+            print(f'Computation time: {1000 * (end_time - start_time):.3f} ms')
+            next(rate_limiter)
+            # Additional buffer
+            time.sleep(1 + random.random())
+
+
 if __name__ == '__main__':
     tru = Tru()
     tru.start_dashboard(
@@ -393,9 +485,23 @@ if __name__ == '__main__':
     #     similarity_cutoff=[None]
     # )
 
-    experiment_with_chunks_and_top_k(
-        chunk_size=[512, ],
-        chunk_overlap=[75, ],
-        top_k=[3, ],
-        similarity_cutoff=[None]
+    # experiment_with_chunks_and_top_k(
+    #     chunk_size=[512, ],
+    #     chunk_overlap=[75, ],
+    #     top_k=[3, ],
+    #     similarity_cutoff=[None]
+    # )
+
+    experiment_with_reranker(
+        chunk_size=512,
+        chunk_overlap=75,
+        top_k=3,
+        top_n=2
+    )
+
+    experiment_with_reranker(
+        chunk_size=512,
+        chunk_overlap=75,
+        top_k=4,
+        top_n=2
     )
