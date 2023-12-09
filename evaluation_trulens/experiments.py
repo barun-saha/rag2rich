@@ -452,7 +452,7 @@ if __name__ == '__main__':
 
     config_values = [
         (512, 50),
-        (512, 100),  # Found to be optimal
+        (512, 100),
         (768, 50),
         (768, 100),
         (1024, 50),
@@ -492,16 +492,24 @@ if __name__ == '__main__':
     #     similarity_cutoff=[None]
     # )
 
-    experiment_with_reranker(
-        chunk_size=512,
-        chunk_overlap=75,
-        top_k=3,
-        top_n=2
-    )
-
-    experiment_with_reranker(
-        chunk_size=512,
-        chunk_overlap=75,
-        top_k=4,
-        top_n=2
-    )
+    # experiment_with_reranker(
+    #     chunk_size=512,
+    #     chunk_overlap=75,
+    #     top_k=3,
+    #     top_n=2
+    # )
+    #
+    # This offers optimal evaluation results
+    # experiment_with_reranker(
+    #     chunk_size=512,
+    #     chunk_overlap=75,
+    #     top_k=4,
+    #     top_n=2
+    # )
+    #
+    # experiment_with_reranker(
+    #     chunk_size=512,
+    #     chunk_overlap=75,
+    #     top_k=4,
+    #     top_n=3
+    # )

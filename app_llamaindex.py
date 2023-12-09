@@ -27,7 +27,12 @@ async def on_chat_start():
     ).send()
 
     try:
-        query_engine = dhelp.get_top_k_query_engine(k=6, chunk_size=512, chunk_overlap=100)
+        query_engine = dhelp.get_top_k_query_engine(
+            k=4,
+            chunk_size=512,
+            chunk_overlap=75,
+            top_n=3
+        )
         cl.user_session.set('query_engine', query_engine)
     except Exception as ex:
         message = f'*** An error occurred while trying to load the application: {ex}'

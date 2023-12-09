@@ -40,7 +40,13 @@ Based on the above-mentioned document, the application generates answers for eac
 - chunk overlap  
 - top-k 
   
-For each such set, the average richness, $R$, is computed.  The set with the highest value of $R$ is used as the final, optimal configuration. The currently used optimal values are: chunk size = 512, chunk overlap = 100, and top-k = 6.
+For each such set, the average richness, $R$, is computed.  The set with the highest value of $R$ is used as the optimal configuration. 
+
+The currently used RAG parameters are: 
+- chunk size = 512
+- chunk overlap = 75
+- top-k = 4
+- Cohere re-ranker top-n = 3
 
 
 ## Usage
