@@ -7,6 +7,7 @@ from llama_index.indices.vector_store import VectorIndexRetriever
 from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.vector_stores import MilvusVectorStore
 
+import ingest_data
 from helper.vertex_ai import CustomVertexAIEmbeddings, get_llm
 
 
@@ -63,9 +64,8 @@ def get_top_k_query_engine(
     :return:
     """
 
-    vector_store = get_vector_store(overwrite=False)
     service_context = get_service_context(chunk_size, chunk_overlap)
-    index = VectorStoreIndex.from_vector_store(vector_store, service_context=service_context)
+    index = ingest_data.build_index()
 
     # Configure retriever
     retriever = VectorIndexRetriever(
@@ -79,7 +79,7 @@ def get_top_k_query_engine(
 
     # Assemble query engine
     if top_n:
-        print('Using CohereRerank...')
+        print(f'Using Cohere rerank with {top_n=}...')
         cohere_rerank = CohereRerank(
             api_key=os.environ['COHERE_API_KEY'],
             top_n=top_n
