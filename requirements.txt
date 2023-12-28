@@ -1,15 +1,29 @@
 google-cloud-aiplatform
-litellm==0.14.1
-trulens_eval==0.17.0
-langchain==0.0.323
-openai==0.27.6
-
-llama-index==0.8.62
-
-chainlit~=0.7.700
+# litellm
+# trulens_eval
+# openai
+llama-index
+langchain
+chainlit
 pypdf
-requests~=2.31.0
-numpy~=1.26.2
+requests
+numpy
+python-dotenv
+cohere
 
-pymilvus~=2.3.4
-python-dotenv~=1.0.0
+
+# google-cloud-aiplatform
+# litellm==0.14.1
+# trulens_eval==0.17.0
+# langchain==0.0.323
+# openai==0.27.6
+#
+# llama-index==0.8.62
+#
+# chainlit~=0.7.700
+# pypdf
+# requests~=2.31.0
+# numpy~=1.26.2
+#
+# pymilvus~=2.3.4
+# python-dotenv~=1.0.0

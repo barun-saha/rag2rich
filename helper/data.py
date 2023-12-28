@@ -5,7 +5,7 @@ from llama_index import ServiceContext, get_response_synthesizer, VectorStoreInd
 from llama_index.indices.postprocessor import CohereRerank
 from llama_index.indices.vector_store import VectorIndexRetriever
 from llama_index.query_engine import RetrieverQueryEngine
-from llama_index.vector_stores import MilvusVectorStore
+# from llama_index.vector_stores import MilvusVectorStore
 
 import ingest_data
 from helper.vertex_ai import CustomVertexAIEmbeddings, get_llm
@@ -31,22 +31,22 @@ def get_service_context(chunk_size: int, chunk_overlap: int) -> ServiceContext:
     )
 
 
-def get_vector_store(overwrite: bool) -> MilvusVectorStore:
-    """
-    Return an instance of MilvusVectorStore on Zilliz cloud.
-
-    :param overwrite: Whether or not to overwrite the existing collection
-    :return: The vector store
-    """
-
-    return MilvusVectorStore(
-        uri=os.environ['ZILLIZ_URI'],
-        token=os.environ['ZILLIZ_TOKEN'],
-        collection_name=os.environ['ZILLIZ_COLLECTION_NAME'],
-        similarity_metric='L2',
-        dim=int(os.environ['ZILLIZ_DIMENSION']),
-        overwrite=overwrite
-    )
+# def get_vector_store(overwrite: bool) -> MilvusVectorStore:
+#     """
+#     Return an instance of MilvusVectorStore on Zilliz cloud.
+#
+#     :param overwrite: Whether or not to overwrite the existing collection
+#     :return: The vector store
+#     """
+#
+#     return MilvusVectorStore(
+#         uri=os.environ['ZILLIZ_URI'],
+#         token=os.environ['ZILLIZ_TOKEN'],
+#         collection_name=os.environ['ZILLIZ_COLLECTION_NAME'],
+#         similarity_metric='L2',
+#         dim=int(os.environ['ZILLIZ_DIMENSION']),
+#         overwrite=overwrite
+#     )
 
 
 def get_top_k_query_engine(
